@@ -1,0 +1,523 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>FlipMap Pro — App installabile</title>
+  <meta name="theme-color" content="#0f172a" />
+  <link rel="manifest" href="./manifest.json" />
+  <style>
+    :root{
+      --bg:#09101f; --panel:#111a31; --card:#15203a; --line:#233157;
+      --text:#eef3ff; --muted:#9caacc; --green:#20c997; --yellow:#f0b429; --red:#ef476f; --blue:#4dabf7;
+    }
+    *{box-sizing:border-box}
+    body{margin:0;font-family:Inter,Arial,sans-serif;background:linear-gradient(180deg,#09101f,#0f1730);color:var(--text)}
+    .app{display:grid;grid-template-columns:250px 1fr;min-height:100vh}
+    .sidebar{padding:20px;border-right:1px solid rgba(255,255,255,.07);background:rgba(0,0,0,.12)}
+    .brand{display:flex;gap:12px;align-items:center;margin-bottom:20px}
+    .logo{width:42px;height:42px;border-radius:14px;display:flex;align-items:center;justify-content:center;font-weight:900;color:#07131e;background:linear-gradient(135deg,var(--green),var(--blue))}
+    .brand h1{margin:0;font-size:20px}.brand p{margin:4px 0 0;font-size:12px;color:var(--muted)}
+    .nav button,.btn,.input,select,textarea{font:inherit}
+    .nav button{display:block;width:100%;text-align:left;padding:12px 14px;background:transparent;color:var(--text);border:1px solid transparent;border-radius:14px;margin-bottom:8px;cursor:pointer}
+    .nav button.active,.nav button:hover{background:rgba(255,255,255,.05);border-color:rgba(255,255,255,.07)}
+    .side-note{margin-top:16px;padding:14px;background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.06);border-radius:16px;font-size:13px;color:var(--muted);line-height:1.4}
+    .main{padding:20px;overflow:auto}
+    .toolbar{display:flex;justify-content:space-between;gap:14px;align-items:flex-start;flex-wrap:wrap;margin-bottom:16px}
+    .title h2{margin:0;font-size:28px}.title p{margin:6px 0 0;color:var(--muted)}
+    .controls{display:flex;gap:10px;flex-wrap:wrap}
+    .input,select,textarea,.btn{padding:10px 12px;border-radius:12px;background:rgba(255,255,255,.05);color:var(--text);border:1px solid rgba(255,255,255,.08)}
+    .btn{cursor:pointer;font-weight:700}
+    .btn.primary{background:linear-gradient(135deg,var(--green),#32d0ab);color:#07141c;border:none}
+    .btn.blue{background:linear-gradient(135deg,var(--blue),#73c3ff);color:#07141c;border:none}
+    .btn.red{background:linear-gradient(135deg,#ff7a95,var(--red));border:none}
+    .cards{display:grid;grid-template-columns:repeat(4,1fr);gap:14px;margin-bottom:16px}
+    .card,.panel{background:rgba(255,255,255,.05);border:1px solid rgba(255,255,255,.07);border-radius:20px;padding:16px}
+    .card .label{font-size:13px;color:var(--muted)} .card .value{margin-top:8px;font-size:28px;font-weight:900} .card .sub{margin-top:8px;font-size:13px;color:var(--muted)}
+    .grid{display:grid;grid-template-columns:1.2fr 1fr;gap:16px}
+    .panel h3{margin:0 0 6px}.sub{font-size:13px;color:var(--muted);margin-bottom:12px}
+    .map{height:420px;position:relative;overflow:hidden;border-radius:18px;background:linear-gradient(180deg,#ebf4ff,#dce8fb)}
+    .road,.road2,.road3{position:absolute;background:rgba(88,107,146,.16);border-radius:999px}
+    .road{left:-30px;top:180px;width:120%;height:11px;transform:rotate(-16deg)}
+    .road2{left:220px;top:-20px;width:11px;height:120%;transform:rotate(20deg)}
+    .road3{left:50px;top:70px;width:82%;height:8px;transform:rotate(7deg)}
+    .maplabel{position:absolute;padding:6px 10px;border-radius:999px;background:rgba(255,255,255,.9);font-size:12px;font-weight:800;color:#20304e}
+    .pin{position:absolute;width:16px;height:16px;border-radius:50%;border:3px solid white;transform:translate(-50%,-50%);box-shadow:0 8px 18px rgba(0,0,0,.18);cursor:pointer}
+    .pin.green{background:var(--green)} .pin.yellow{background:var(--yellow)} .pin.red{background:var(--red)} .pin.active{width:23px;height:23px}
+    .legend{display:flex;gap:12px;flex-wrap:wrap;margin-top:12px;font-size:13px;color:var(--muted)} .dot{width:10px;height:10px;border-radius:50%;display:inline-block;margin-right:6px}
+    .list{display:grid;gap:10px;max-height:420px;overflow:auto}
+    .deal{padding:14px;border-radius:16px;background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.07);cursor:pointer}
+    .deal.active,.deal:hover{background:rgba(255,255,255,.08)}
+    .deal-top{display:flex;justify-content:space-between;gap:8px}.deal h4{margin:0 0 4px}
+    .muted{color:var(--muted)}
+    .pill,.badge{display:inline-flex;align-items:center;justify-content:center;padding:6px 10px;border-radius:999px;font-size:12px;font-weight:800}
+    .pill{background:#172445;border:1px solid rgba(255,255,255,.07)} .badge.green{background:rgba(32,201,151,.16);color:#97efd5} .badge.yellow{background:rgba(240,180,41,.16);color:#ffe092} .badge.red{background:rgba(239,71,111,.16);color:#ffbed0}
+    .mini{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-top:10px}.mini div{padding:10px;border-radius:12px;background:rgba(255,255,255,.03);font-size:13px}
+    .details{display:grid;grid-template-columns:1.1fr .9fr;gap:16px;margin-top:16px}
+    .box{padding:16px;border-radius:18px;background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.07)}
+    .numbers{display:grid;grid-template-columns:repeat(2,1fr);gap:10px}.n{padding:12px;border-radius:14px;background:rgba(255,255,255,.03)} .n .t{font-size:12px;color:var(--muted)} .n .v{margin-top:6px;font-size:22px;font-weight:900}
+    .action{margin-top:12px;padding:16px;border-radius:16px;text-align:center;font-size:18px;font-weight:900;border:1px solid rgba(255,255,255,.08)}
+    .progress{height:12px;border-radius:999px;overflow:hidden;background:#09101f;border:1px solid rgba(255,255,255,.06);margin-top:8px}.bar{height:100%;background:linear-gradient(90deg,var(--green),var(--blue))}
+    .alerts{display:grid;gap:10px}.alert{padding:12px;border-radius:14px;background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.07);font-size:14px}.alert strong{display:block;margin-bottom:4px}
+    .table-wrap{overflow:auto} table{width:100%;border-collapse:collapse;font-size:14px} th,td{padding:10px 8px;border-bottom:1px solid rgba(255,255,255,.06);text-align:left} th{color:var(--muted)}
+    .hidden{display:none !important}
+    .form-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:10px}.field label{display:block;font-size:12px;color:var(--muted);margin-bottom:6px}.field input,.field textarea{width:100%}.field textarea{min-height:86px;resize:vertical}
+    canvas{width:100%;height:220px;background:rgba(255,255,255,.02);border-radius:14px}
+    @media (max-width:1180px){.app{grid-template-columns:1fr}.sidebar{display:none}.cards{grid-template-columns:repeat(2,1fr)}.grid,.details,.form-grid{grid-template-columns:1fr}}
+  </style>
+</head>
+<body>
+<div class="app">
+  <aside class="sidebar">
+    <div class="brand"><div class="logo">F</div><div><h1>FlipMap Pro</h1><p>App installabile</p></div></div>
+    <div class="nav">
+      <button class="active" data-view="dashboard">🏠 Dashboard</button>
+      <button data-view="import">📥 Inserisci / importa</button>
+      <button data-view="db">🗂️ Archivio</button>
+      <button data-view="settings">⚙️ Benchmark</button>
+    </div>
+    <div class="side-note">
+      Questa è una versione reale e pronta da usare senza sviluppatore.<br><br>
+      Salva gli immobili sul dispositivo nel browser e può essere installata come app.
+    </div>
+  </aside>
+
+  <main class="main">
+    <section id="dashboardView">
+      <div class="toolbar">
+        <div class="title">
+          <h2>FlipMap Pro</h2>
+          <p>Software operativo per analizzare flipping immobiliari a Bologna.</p>
+        </div>
+        <div class="controls">
+          <input id="searchBox" class="input" placeholder="Cerca zona o indirizzo" />
+          <select id="zoneFilter"></select>
+          <select id="actionFilter">
+            <option value="">Tutte le azioni</option>
+            <option>CHIAMARE OGGI</option>
+            <option>OFFERTA CONDIZIONATA</option>
+            <option>TRATTARE FORTE</option>
+            <option>SCARTARE</option>
+          </select>
+          <button class="btn blue" id="installBtn">Installa app</button>
+          <button class="btn" id="exportBtn">Esporta CSV</button>
+          <button class="btn primary" id="gotoImportBtn">Nuovo immobile</button>
+        </div>
+      </div>
+
+      <div class="cards">
+        <div class="card"><div class="label">Immobili</div><div class="value" id="kpiCount">0</div><div class="sub" id="kpiCountSub"></div></div>
+        <div class="card"><div class="label">Score medio shortlist</div><div class="value" id="kpiScore">0</div><div class="sub">Deal con score ≥ 70</div></div>
+        <div class="card"><div class="label">ROI medio</div><div class="value" id="kpiRoi">0%</div><div class="sub">Shortlist operativa</div></div>
+        <div class="card"><div class="label">Alert forti</div><div class="value" id="kpiAlerts">0</div><div class="sub">Buy box / top score</div></div>
+      </div>
+
+      <div class="grid">
+        <div class="panel">
+          <h3>Mappa opportunità</h3>
+          <div class="sub">Pin automatici basati su score e coordinate o microzona.</div>
+          <div class="map" id="map">
+            <div class="road"></div><div class="road2"></div><div class="road3"></div>
+            <div class="maplabel" style="left:18%;top:18%;">Saragozza</div>
+            <div class="maplabel" style="left:67%;top:18%;">San Donato</div>
+            <div class="maplabel" style="left:48%;top:42%;">Centro</div>
+            <div class="maplabel" style="left:74%;top:65%;">Murri</div>
+            <div class="maplabel" style="left:21%;top:68%;">Saffi</div>
+          </div>
+          <div class="legend">
+            <span><i class="dot" style="background:var(--green)"></i>Flip forte</span>
+            <span><i class="dot" style="background:var(--yellow)"></i>Da negoziare</span>
+            <span><i class="dot" style="background:var(--red)"></i>Da scartare</span>
+          </div>
+        </div>
+        <div class="panel">
+          <h3>Shortlist operativa</h3>
+          <div class="sub">Ranking automatico dei migliori deal.</div>
+          <div class="list" id="dealList"></div>
+        </div>
+      </div>
+
+      <div class="details">
+        <div class="panel">
+          <h3>Scheda deal</h3>
+          <div class="sub">Numeri, rischio, rivendibilità e decisione operativa.</div>
+          <div id="detailBox"></div>
+        </div>
+        <div style="display:grid;gap:16px">
+          <div class="panel">
+            <h3>Grafico economico</h3>
+            <div class="sub">Acquisto, lavori, costi, ARV e profitto.</div>
+            <canvas id="dealChart" width="560" height="220"></canvas>
+          </div>
+          <div class="panel">
+            <h3>Alert</h3>
+            <div class="sub">Segnali automatici sul deal selezionato.</div>
+            <div class="alerts" id="alertBox"></div>
+          </div>
+        </div>
+      </div>
+
+      <div class="panel" style="margin-top:16px">
+        <h3>Archivio rapido</h3>
+        <div class="sub">Vista filtrabile degli immobili.</div>
+        <div class="table-wrap">
+          <table>
+            <thead><tr><th>Rank</th><th>Immobile</th><th>Zona</th><th>Prezzo</th><th>ARV</th><th>ROI</th><th>Score</th><th>Azione</th><th></th></tr></thead>
+            <tbody id="tableBody"></tbody>
+          </table>
+        </div>
+      </div>
+    </section>
+
+    <section id="importView" class="hidden">
+      <div class="toolbar">
+        <div class="title"><h2>Inserisci / importa</h2><p>Aggiungi un immobile manualmente o importa un CSV.</p></div>
+        <div class="controls"><button class="btn" data-go="dashboard">Torna alla dashboard</button></div>
+      </div>
+
+      <div class="panel">
+        <h3>Nuovo immobile</h3>
+        <div class="sub">Compila i campi principali: il software calcola tutto il resto.</div>
+        <form id="propertyForm">
+          <div class="form-grid">
+            <div class="field"><label>ID</label><input name="id" placeholder="BO-001" /></div>
+            <div class="field"><label>Zona</label><input name="zona" required /></div>
+            <div class="field"><label>Microzona</label><input name="microzona" /></div>
+            <div class="field"><label>Indirizzo</label><input name="indirizzo" required /></div>
+
+            <div class="field"><label>Prezzo richiesto (€)</label><input name="prezzo" type="number" required /></div>
+            <div class="field"><label>MQ</label><input name="mq" type="number" required /></div>
+            <div class="field"><label>Lavori (€)</label><input name="lavori" type="number" value="25000" /></div>
+            <div class="field"><label>Altri costi (€)</label><input name="altriCosti" type="number" value="18000" /></div>
+
+            <div class="field"><label>ARV override (€)</label><input name="arvOverride" type="number" /></div>
+            <div class="field"><label>Prezzo precedente (€)</label><input name="prezzoPrecedente" type="number" /></div>
+            <div class="field"><label>Giorni sul mercato</label><input name="giorniMercato" type="number" value="30" /></div>
+            <div class="field"><label>Canone stimato (€)</label><input name="canoneStimato" type="number" /></div>
+
+            <div class="field"><label>Rischio urbanistico (0-100)</label><input name="rischioUrbanistico" type="number" value="20" /></div>
+            <div class="field"><label>Rischio catastale (0-100)</label><input name="rischioCatastale" type="number" value="20" /></div>
+            <div class="field"><label>Rischio notarile (0-100)</label><input name="rischioNotarile" type="number" value="15" /></div>
+            <div class="field"><label>Rivendibilità base (0-100)</label><input name="rivendibilitaBase" type="number" value="75" /></div>
+
+            <div class="field"><label>Latitudine</label><input name="lat" type="number" step="0.000001" /></div>
+            <div class="field"><label>Longitudine</label><input name="lng" type="number" step="0.000001" /></div>
+            <div class="field"><label>Sorgente</label><input name="sorgente" /></div>
+            <div class="field"><label>Note</label><input name="note" /></div>
+          </div>
+          <div style="margin-top:12px;display:flex;gap:10px;flex-wrap:wrap">
+            <button class="btn primary" type="submit">Salva immobile</button>
+            <button class="btn" type="reset">Pulisci</button>
+          </div>
+        </form>
+      </div>
+
+      <div class="panel" style="margin-top:16px">
+        <h3>Import CSV</h3>
+        <div class="sub">Usa il template o incolla il CSV direttamente.</div>
+        <div style="display:flex;gap:10px;flex-wrap:wrap;margin-bottom:12px">
+          <button class="btn blue" id="templateBtn">Scarica template CSV</button>
+          <input id="csvFile" class="input" type="file" accept=".csv" />
+          <button class="btn primary" id="importBtn">Importa CSV</button>
+        </div>
+        <textarea id="csvPaste" class="input" style="width:100%;min-height:220px" placeholder="id,zona,microzona,indirizzo,prezzo,mq,lavori,altriCosti,arvOverride,prezzoPrecedente,giorniMercato,canoneStimato,rischioUrbanistico,rischioCatastale,rischioNotarile,rivendibilitaBase,lat,lng,sorgente,note"></textarea>
+      </div>
+    </section>
+
+    <section id="dbView" class="hidden">
+      <div class="toolbar">
+        <div class="title"><h2>Archivio completo</h2><p>Tutti gli immobili salvati sul dispositivo.</p></div>
+        <div class="controls">
+          <button class="btn" data-go="dashboard">Torna alla dashboard</button>
+          <button class="btn red" id="clearAllBtn">Cancella tutto</button>
+        </div>
+      </div>
+      <div class="panel">
+        <div class="table-wrap">
+          <table>
+            <thead><tr><th>ID</th><th>Zona</th><th>Microzona</th><th>Indirizzo</th><th>Prezzo</th><th>MQ</th><th>ARV</th><th>ROI</th><th>Score</th><th>Azione</th></tr></thead>
+            <tbody id="dbBody"></tbody>
+          </table>
+        </div>
+      </div>
+    </section>
+
+    <section id="settingsView" class="hidden">
+      <div class="toolbar">
+        <div class="title"><h2>Benchmark €/mq</h2><p>Modifica i valori medi per zona. Il motore di analisi userà questi dati.</p></div>
+        <div class="controls"><button class="btn" data-go="dashboard">Torna alla dashboard</button><button class="btn primary" id="saveBenchBtn">Salva benchmark</button></div>
+      </div>
+      <div class="panel">
+        <div class="table-wrap">
+          <table>
+            <thead><tr><th>Zona</th><th>€/mq</th></tr></thead>
+            <tbody id="benchBody"></tbody>
+          </table>
+        </div>
+      </div>
+    </section>
+  </main>
+</div>
+
+<script>
+const STORAGE_KEY='flipmap_installabile_v1';
+const BENCH_KEY='flipmap_installabile_benchmarks';
+const defaultBench={
+  "Centro":4668,"Murri":3932,"Saragozza":3901,"Costa/Saffi":3901,"San Donato":3104,"Bolognina":3200,"Navile":3000,"Mazzini":3850,"Santo Stefano":4550,"Bologna":3802
+};
+const zonePos={
+  "Centro":{x:48,y:42},"Murri":{x:74,y:65},"Saragozza":{x:18,y:18},"Costa/Saffi":{x:21,y:68},"San Donato":{x:67,y:18},"Bolognina":{x:48,y:16},"Navile":{x:34,y:12},"Mazzini":{x:82,y:46},"Santo Stefano":{x:62,y:58},"Bologna":{x:48,y:42}
+};
+const seed=[
+{id:"BO-001",zona:"San Donato",microzona:"Via San Donato / asse universitario",indirizzo:"Via San Donato 48",prezzo:148000,mq:58,lavori:22000,altriCosti:18000,arvOverride:"",prezzoPrecedente:162000,giorniMercato:48,canoneStimato:950,rischioUrbanistico:12,rischioCatastale:18,rischioNotarile:10,rivendibilitaBase:86,lat:44.505,lng:11.374,sorgente:"demo",note:"taglio piccolo"},
+{id:"BO-002",zona:"Murri",microzona:"Asse Murri/Toscana",indirizzo:"Via Murri 112",prezzo:210000,mq:72,lavori:32000,altriCosti:21000,arvOverride:"",prezzoPrecedente:225000,giorniMercato:37,canoneStimato:1200,rischioUrbanistico:20,rischioCatastale:22,rischioNotarile:14,rivendibilitaBase:80,lat:44.485,lng:11.356,sorgente:"demo",note:"buona rivendibilità"},
+{id:"BO-003",zona:"Saragozza",microzona:"Costa / Saffi",indirizzo:"Via Andrea Costa 83",prezzo:262000,mq:83,lavori:33000,altriCosti:26000,arvOverride:"",prezzoPrecedente:278000,giorniMercato:68,canoneStimato:1300,rischioUrbanistico:28,rischioCatastale:31,rischioNotarile:20,rivendibilitaBase:76,lat:44.492,lng:11.324,sorgente:"demo",note:"trattare forte"}
+];
+let properties=[], benches={}, filtered=[], currentIndex=0, deferredPrompt=null;
+const euro=v=>new Intl.NumberFormat('it-IT',{style:'currency',currency:'EUR',maximumFractionDigits:0}).format(Number(v||0));
+const pct=v=>`${Number(v||0).toFixed(1)}%`;
+const num=(v,d=0)=>{const n=Number(v); return isNaN(n)?d:n}
+const clamp=(v,min,max)=>Math.max(min,Math.min(max,v));
+
+function load(){
+  properties=JSON.parse(localStorage.getItem(STORAGE_KEY)||'null')||seed;
+  benches=JSON.parse(localStorage.getItem(BENCH_KEY)||'null')||{...defaultBench};
+}
+function save(){ localStorage.setItem(STORAGE_KEY, JSON.stringify(properties)); }
+function saveBench(){ localStorage.setItem(BENCH_KEY, JSON.stringify(benches)); }
+function bench(z){ return benches[z] || benches["Bologna"] || 3802; }
+
+function metrics(p){
+  const prezzo=num(p.prezzo), mq=num(p.mq,1), lavori=num(p.lavori), altri=num(p.altriCosti),
+        prev=num(p.prezzoPrecedente,prezzo), giorni=num(p.giorniMercato,30),
+        rU=clamp(num(p.rischioUrbanistico,20),0,100), rC=clamp(num(p.rischioCatastale,20),0,100), rN=clamp(num(p.rischioNotarile,15),0,100),
+        riv=clamp(num(p.rivendibilitaBase,75),0,100), b=bench(p.zona),
+        arv=num(p.arvOverride)>0?num(p.arvOverride):Math.round(mq*b*1.02),
+        costi=prezzo+lavori+altri, profitto=arv-costi, equity=prezzo*0.30+lavori+altri, roi=equity>0?(profitto/equity)*100:0,
+        sconto=((b*mq)-prezzo)/Math.max(1,b*mq)*100, maxBuy=Math.round((arv*0.70)-lavori-altri),
+        ribasso=prev>0&&prev!==prezzo?((prev-prezzo)/prev)*100:0,
+        rischio=(rU+rC+rN)/3, liquidita=clamp(riv+(mq<=75?8:0)+(mq>=110?-8:0),0,100), tempo=clamp(100-(giorni*0.6),0,100),
+        stress=((arv*0.95)-(prezzo+lavori*1.05+altri*1.05))/Math.max(1,equity)*100,
+        stressScore=clamp(stress>=12?100:stress<=0?0:stress*8,0,100);
+  const score=(clamp(sconto,0,20)/20)*25+(clamp(profitto/60000*100,0,100)/100)*20+(clamp(roi,0,40)/40)*15+(liquidita/100)*10+(tempo/100)*10+(stressScore/100)*5-(rischio/100)*15;
+  const score100=Math.round(clamp(score,0,100));
+  let azione='SCARTARE';
+  if(score100>=85&&prezzo<=maxBuy*1.03) azione='CHIAMARE OGGI';
+  else if(score100>=75&&prezzo<=maxBuy*1.08) azione='OFFERTA CONDIZIONATA';
+  else if(score100>=60) azione='TRATTARE FORTE';
+  const alerts=[];
+  if(prezzo<=maxBuy) alerts.push('BUY BOX CENTRATA');
+  if(ribasso>=5) alerts.push(`RIBASSO RECENTE ${ribasso.toFixed(1)}%`);
+  if(score100>=85) alerts.push('TOP SCORE INVESTITORE');
+  if(giorni>=60) alerts.push('PRESSIONE VENDITORE');
+  if(rischio>=45) alerts.push('DUE DILIGENCE DA APPROFONDIRE');
+  return {...p, prezzo,mq,lavori,altriCosti:altri,arv,profitto,equity,roi,sconto,maxBuy,ribasso,rischio,liquidita,score:score100,azione,alerts,benchmark:b};
+}
+function computeAll(){
+  properties=properties.map(metrics).sort((a,b)=>b.score-a.score);
+  properties.forEach((p,i)=>p.rank=i+1);
+}
+function filterData(){
+  const q=(document.getElementById('searchBox').value||'').toLowerCase();
+  const z=document.getElementById('zoneFilter').value||'';
+  const a=document.getElementById('actionFilter').value||'';
+  filtered=properties.filter(p=>{
+    const hay=`${p.zona} ${p.microzona||''} ${p.indirizzo||''} ${p.note||''}`.toLowerCase();
+    return (!q||hay.includes(q)) && (!z||p.zona===z) && (!a||p.azione===a);
+  });
+  if(!filtered.length) filtered=[...properties];
+}
+function badgeClass(a){ return (a==='CHIAMARE OGGI'||a==='OFFERTA CONDIZIONATA')?'green':a==='TRATTARE FORTE'?'yellow':'red'; }
+function pinClass(s){ return s>=85?'green':s>=70?'yellow':'red'; }
+function point(p){
+  if(p.lat&&p.lng){
+    const minLat=44.44,maxLat=44.54,minLng=11.27,maxLng=11.41;
+    return {x:clamp(((p.lng-minLng)/(maxLng-minLng))*100,6,94), y:clamp((1-((p.lat-minLat)/(maxLat-minLat)))*100,8,92)};
+  }
+  return zonePos[p.zona]||zonePos["Bologna"];
+}
+function renderZoneFilter(){
+  const sel=document.getElementById('zoneFilter');
+  const zones=[...new Set(properties.map(p=>p.zona).filter(Boolean))].sort();
+  sel.innerHTML='<option value="">Tutte le zone</option>'+zones.map(z=>`<option>${z}</option>`).join('');
+}
+function renderKpi(){
+  const top=properties.filter(p=>p.score>=70);
+  const avgScore=top.length?Math.round(top.reduce((s,p)=>s+p.score,0)/top.length):0;
+  const avgRoi=top.length?(top.reduce((s,p)=>s+p.roi,0)/top.length).toFixed(1):'0.0';
+  const alerts=properties.filter(p=>p.alerts.includes('BUY BOX CENTRATA')||p.alerts.includes('TOP SCORE INVESTITORE')).length;
+  document.getElementById('kpiCount').textContent=properties.length;
+  document.getElementById('kpiCountSub').textContent=`${top.length} deal in shortlist`;
+  document.getElementById('kpiScore').textContent=`${avgScore}/100`;
+  document.getElementById('kpiRoi').textContent=`${avgRoi}%`;
+  document.getElementById('kpiAlerts').textContent=alerts;
+}
+function renderMap(){
+  const map=document.getElementById('map');
+  map.querySelectorAll('.pin').forEach(el=>el.remove());
+  filtered.forEach((p,idx)=>{
+    const pt=point(p);
+    const pin=document.createElement('div');
+    pin.className=`pin ${pinClass(p.score)} ${idx===currentIndex?'active':''}`;
+    pin.style.left=pt.x+'%'; pin.style.top=pt.y+'%'; pin.title=`${p.indirizzo} • Score ${p.score}`;
+    pin.onclick=()=>{currentIndex=idx; renderDynamic();}
+    map.appendChild(pin);
+  });
+}
+function renderList(){
+  document.getElementById('dealList').innerHTML=filtered.map((p,idx)=>`
+    <div class="deal ${idx===currentIndex?'active':''}" onclick="window.sel(${idx})">
+      <div class="deal-top">
+        <div><h4>#${p.rank} • ${p.zona}</h4><div class="muted">${p.indirizzo}</div></div>
+        <div class="pill">Score ${p.score}</div>
+      </div>
+      <div style="margin-top:10px"><span class="badge ${badgeClass(p.azione)}">${p.azione}</span></div>
+      <div class="mini">
+        <div><div class="muted">ROI</div><strong>${pct(p.roi)}</strong></div>
+        <div><div class="muted">Profitto</div><strong>${euro(p.profitto)}</strong></div>
+        <div><div class="muted">Max buy</div><strong>${euro(p.maxBuy)}</strong></div>
+      </div>
+    </div>`).join('');
+}
+window.sel=(idx)=>{currentIndex=idx; renderDynamic();}
+function renderDetail(){
+  const p=filtered[currentIndex]||filtered[0];
+  if(!p) return;
+  const bg=p.azione==='SCARTARE'?'rgba(239,71,111,.16)':p.azione==='TRATTARE FORTE'?'rgba(240,180,41,.16)':'rgba(32,201,151,.16)';
+  document.getElementById('detailBox').innerHTML=`
+    <div class="box">
+      <div style="display:flex;justify-content:space-between;gap:10px;align-items:flex-start">
+        <div><div class="muted">${p.zona} • ${p.microzona||''}</div><h2 style="margin:6px 0 0">${p.indirizzo}</h2></div>
+        <div class="pill">Flip Score ${p.score}</div>
+      </div>
+      <div class="numbers" style="margin-top:14px">
+        <div class="n"><div class="t">Prezzo richiesto</div><div class="v">${euro(p.prezzo)}</div></div>
+        <div class="n"><div class="t">Prezzo max acquisto</div><div class="v">${euro(p.maxBuy)}</div></div>
+        <div class="n"><div class="t">ARV stimato</div><div class="v">${euro(p.arv)}</div></div>
+        <div class="n"><div class="t">Profitto netto</div><div class="v">${euro(p.profitto)}</div></div>
+        <div class="n"><div class="t">ROI su equity</div><div class="v">${pct(p.roi)}</div></div>
+        <div class="n"><div class="t">Equity richiesta</div><div class="v">${euro(p.equity)}</div></div>
+      </div>
+      <div class="action" style="background:${bg}">${p.azione}</div>
+      <div style="margin-top:14px">
+        <div style="display:flex;justify-content:space-between;font-size:13px"><span class="muted">Rivendibilità</span><strong>${Math.round(p.liquidita)}/100</strong></div>
+        <div class="progress"><div class="bar" style="width:${Math.round(p.liquidita)}%"></div></div>
+      </div>
+      <div style="margin-top:14px">
+        <div style="display:flex;justify-content:space-between;font-size:13px"><span class="muted">Rischio</span><strong>${Math.round(p.rischio)}/100</strong></div>
+        <div class="progress"><div class="bar" style="width:${Math.round(p.rischio)}%;background:linear-gradient(90deg,var(--yellow),var(--red))"></div></div>
+      </div>
+      <div class="mini" style="margin-top:14px">
+        <div><div class="muted">Sconto reale</div><strong>${pct(p.sconto)}</strong></div>
+        <div><div class="muted">Ribasso</div><strong>${pct(p.ribasso)}</strong></div>
+        <div><div class="muted">Benchmark</div><strong>${Math.round(p.benchmark)} €/mq</strong></div>
+      </div>
+    </div>`;
+  document.getElementById('alertBox').innerHTML=p.alerts.map((a,i)=>`<div class="alert"><strong>${i===0?'Alert prioritario':i===1?'Segnale di mercato':'Nota operativa'}</strong>${a}</div>`).join('');
+  drawChart(p);
+}
+function shortEuro(v){ if(v>=1_000_000) return `€${(v/1_000_000).toFixed(1)}M`; if(v>=1_000) return `€${Math.round(v/1000)}k`; return euro(v); }
+function roundRect(ctx,x,y,w,h,r){ctx.beginPath();ctx.moveTo(x+r,y);ctx.lineTo(x+w-r,y);ctx.quadraticCurveTo(x+w,y,x+w,y+r);ctx.lineTo(x+w,y+h-r);ctx.quadraticCurveTo(x+w,y+h,x+w-r,y+h);ctx.lineTo(x+r,y+h);ctx.quadraticCurveTo(x,y+h,x,y+h-r);ctx.lineTo(x,y+r);ctx.quadraticCurveTo(x,y,x+r,y);ctx.closePath();ctx.fill();}
+function drawChart(p){
+  const c=document.getElementById('dealChart'), ctx=c.getContext('2d');
+  const vals=[['Acquisto',p.prezzo,'#4dabf7'],['Lavori',p.lavori,'#f0b429'],['Costi',p.altriCosti,'#ff8fab'],['ARV',p.arv,'#20c997'],['Profitto',Math.max(p.profitto,0),'#7ae582']];
+  ctx.clearRect(0,0,c.width,c.height); ctx.fillStyle='rgba(255,255,255,.03)'; ctx.fillRect(0,0,c.width,c.height);
+  const max=Math.max(...vals.map(v=>v[1]),1), m=34, base=c.height-34, w=68, gap=(c.width-m*2-w*vals.length)/(vals.length-1);
+  ctx.strokeStyle='rgba(255,255,255,.16)'; ctx.beginPath(); ctx.moveTo(m,base); ctx.lineTo(c.width-m,base); ctx.stroke();
+  vals.forEach((v,i)=>{const x=m+i*(w+gap), h=(v[1]/max)*130; ctx.fillStyle=v[2]; roundRect(ctx,x,base-h,w,h,10); ctx.fillStyle='#e8eeff'; ctx.font='12px Arial'; ctx.textAlign='center'; ctx.fillText(v[0],x+w/2,c.height-12); ctx.fillText(shortEuro(v[1]),x+w/2,base-h-8);});
+}
+function renderTables(){
+  document.getElementById('tableBody').innerHTML=filtered.map(p=>`
+    <tr>
+      <td>${p.rank}</td><td><strong>${p.indirizzo}</strong><div class="muted">${p.microzona||''}</div></td><td>${p.zona}</td><td>${euro(p.prezzo)}</td><td>${euro(p.arv)}</td><td>${pct(p.roi)}</td><td>${p.score}</td><td><span class="badge ${badgeClass(p.azione)}">${p.azione}</span></td>
+      <td><button class="btn" onclick="window.openId('${p.id}')">Apri</button></td>
+    </tr>`).join('');
+  document.getElementById('dbBody').innerHTML=properties.map(p=>`
+    <tr><td>${p.id||''}</td><td>${p.zona||''}</td><td>${p.microzona||''}</td><td>${p.indirizzo||''}</td><td>${euro(p.prezzo)}</td><td>${p.mq||''}</td><td>${euro(p.arv)}</td><td>${pct(p.roi)}</td><td>${p.score}</td><td>${p.azione}</td></tr>`).join('');
+}
+window.openId=(id)=>{filterData(); const idx=filtered.findIndex(p=>p.id===id); if(idx>=0){currentIndex=idx; show('dashboard'); renderDynamic();}}
+function renderBench(){
+  document.getElementById('benchBody').innerHTML=Object.keys(benches).sort().map(z=>`<tr><td>${z}</td><td><input class="input" type="number" data-zone="${z}" value="${benches[z]}"></td></tr>`).join('');
+}
+function renderDynamic(){ filterData(); currentIndex=Math.min(currentIndex, Math.max(filtered.length-1,0)); renderMap(); renderList(); renderDetail(); renderTables(); }
+function renderAll(){ computeAll(); renderZoneFilter(); renderKpi(); renderDynamic(); renderBench(); }
+
+function show(view){
+  document.querySelectorAll('.nav button').forEach(b=>b.classList.toggle('active', b.dataset.view===view));
+  document.getElementById('dashboardView').classList.toggle('hidden', view!=='dashboard');
+  document.getElementById('importView').classList.toggle('hidden', view!=='import');
+  document.getElementById('dbView').classList.toggle('hidden', view!=='db');
+  document.getElementById('settingsView').classList.toggle('hidden', view!=='settings');
+}
+function esc(v){ const s=String(v??''); return (s.includes(',')||s.includes('"')||s.includes('\n'))?`"${s.replace(/"/g,'""')}"`:s; }
+function exportCsv(){
+  const cols=['id','zona','microzona','indirizzo','prezzo','mq','lavori','altriCosti','arvOverride','prezzoPrecedente','giorniMercato','canoneStimato','rischioUrbanistico','rischioCatastale','rischioNotarile','rivendibilitaBase','lat','lng','sorgente','note'];
+  const rows=[cols.join(',')].concat(properties.map(p=>cols.map(c=>esc(p[c])).join(',')));
+  const blob=new Blob([rows.join('\n')], {type:'text/csv;charset=utf-8;'});
+  const a=document.createElement('a'); a.href=URL.createObjectURL(blob); a.download='flipmap_export.csv'; a.click();
+}
+function downloadTemplate(){
+  const header='id,zona,microzona,indirizzo,prezzo,mq,lavori,altriCosti,arvOverride,prezzoPrecedente,giorniMercato,canoneStimato,rischioUrbanistico,rischioCatastale,rischioNotarile,rivendibilitaBase,lat,lng,sorgente,note\n';
+  const row='BO-100,Murri,Asse Murri/Toscana,Via Esempio 10,215000,70,30000,20000,,229000,45,1200,20,18,12,80,44.485,11.356,portale,taglio interessante\n';
+  const blob=new Blob([header+row], {type:'text/csv;charset=utf-8;'});
+  const a=document.createElement('a'); a.href=URL.createObjectURL(blob); a.download='flipmap_template.csv'; a.click();
+}
+function parseCsv(text){
+  const rows=[]; let row=[], cell='', q=false;
+  for(let i=0;i<text.length;i++){
+    const ch=text[i], nx=text[i+1];
+    if(q){ if(ch=='"'&&nx=='"'){cell+='"';i++;} else if(ch=='"'){q=false;} else cell+=ch; }
+    else { if(ch=='"') q=true; else if(ch==','){row.push(cell);cell='';} else if(ch=='\n'){row.push(cell);rows.push(row);row=[];cell='';} else if(ch!='\r') cell+=ch; }
+  }
+  if(cell.length||row.length){row.push(cell);rows.push(row);}
+  return rows;
+}
+function importCsvText(text){
+  const rows=parseCsv(text.trim()); if(rows.length<2) return alert('CSV non valido');
+  const headers=rows[0].map(h=>h.trim());
+  const incoming=rows.slice(1).filter(r=>r.some(c=>String(c).trim())).map(r=>{const o={}; headers.forEach((h,i)=>o[h]=r[i]??''); return o;});
+  properties=properties.concat(incoming); save(); renderAll(); alert(`Importati ${incoming.length} immobili`);
+}
+function saveForm(e){
+  e.preventDefault();
+  const fd=new FormData(e.target), o={};
+  for(const [k,v] of fd.entries()) o[k]=v;
+  if(!o.id) o.id=`BO-${Date.now().toString().slice(-6)}`;
+  properties.push(o); save(); renderAll(); e.target.reset(); show('dashboard');
+}
+function clearAll(){
+  if(!confirm('Cancellare tutti gli immobili salvati?')) return;
+  localStorage.removeItem(STORAGE_KEY); properties=[...seed]; save(); renderAll(); show('dashboard');
+}
+function wire(){
+  document.querySelectorAll('.nav button').forEach(b=>b.onclick=()=>show(b.dataset.view));
+  document.querySelectorAll('[data-go]').forEach(b=>b.onclick=()=>show(b.dataset.go));
+  document.getElementById('searchBox').addEventListener('input', ()=>{currentIndex=0; renderDynamic();});
+  document.getElementById('zoneFilter').addEventListener('change', ()=>{currentIndex=0; renderDynamic();});
+  document.getElementById('actionFilter').addEventListener('change', ()=>{currentIndex=0; renderDynamic();});
+  document.getElementById('gotoImportBtn').onclick=()=>show('import');
+  document.getElementById('exportBtn').onclick=exportCsv;
+  document.getElementById('templateBtn').onclick=downloadTemplate;
+  document.getElementById('propertyForm').addEventListener('submit', saveForm);
+  document.getElementById('importBtn').onclick=()=>{
+    const file=document.getElementById('csvFile').files[0], pasted=document.getElementById('csvPaste').value.trim();
+    if(file){ const r=new FileReader(); r.onload=()=>importCsvText(r.result); r.readAsText(file,'utf-8'); }
+    else if(pasted) importCsvText(pasted);
+    else alert('Seleziona un file o incolla il CSV');
+  };
+  document.getElementById('saveBenchBtn').onclick=()=>{
+    document.querySelectorAll('[data-zone]').forEach(i=>benches[i.dataset.zone]=Number(i.value||0));
+    saveBench(); renderAll(); alert('Benchmark salvati');
+  };
+  document.getElementById('clearAllBtn').onclick=clearAll;
+  window.addEventListener('beforeinstallprompt', (e)=>{ e.preventDefault(); deferredPrompt=e; document.getElementById('installBtn').style.display='inline-flex'; });
+  document.getElementById('installBtn').onclick=async()=>{
+    if(!deferredPrompt) return alert('Su questo browser l’installazione potrebbe non essere disponibile. Apri via localhost o hosting statico.');
+    deferredPrompt.prompt(); await deferredPrompt.userChoice; deferredPrompt=null;
+  };
+  if('serviceWorker' in navigator){ window.addEventListener('load', ()=>navigator.serviceWorker.register('./sw.js').catch(()=>{})); }
+}
+load(); save(); wire(); renderAll();
+</script>
+</body>
+</html>
